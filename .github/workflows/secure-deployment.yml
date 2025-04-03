@@ -63,23 +63,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Create dummy test file if needed
-        run: |
-          mkdir -p __tests__
-          if [ ! -f "__tests__/dummy.test.js" ]; then
-            echo "test('Basic test', () => { expect(true).toBe(true); });" > __tests__/dummy.test.js
-          fi
-
-      - name: Add Jest to package.json
-        run: |
-          npm install --save-dev jest
-          npm pkg set scripts.test="jest"
-
       - name: Run tests
         run: npm test
 
       - name: Check test coverage
         run: |
+          # Make sure your Jest configuration is set up to output coverage to the desired directory (usually `./coverage`)
           COVERAGE=$(grep -Po '(?<=\s)[0-9]+(?=\s*%\s*.*total)' ./coverage/lcov-report/index.html || echo "0")
           echo "Test Coverage: $COVERAGE%"
           if [ "$COVERAGE" -lt 80 ]; then
