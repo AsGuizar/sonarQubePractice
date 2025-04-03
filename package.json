@@ -1,0 +1,24 @@
+{
+  "name": "sonarqubepractice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "deploy": "gh-pages -d ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AsGuizar/sonarQubePractice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AsGuizar/sonarQubePractice/issues"
+  },
+  "homepage": "https://github.com/AsGuizar/sonarQubePractice#readme",
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}

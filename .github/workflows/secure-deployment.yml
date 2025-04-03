@@ -1,0 +1,139 @@
+name: Secure Deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security_scan:
+    name: Security & Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Security Audit (npm)
+        run: npm audit --audit-level=critical
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "My JavaScript App"
+          format: "HTML"
+          out: "reports"
+
+      - name: Scan for Secrets (TruffleHog)
+        uses: edplato/trufflehog-actions-scan@main
+        with:
+          base: "HEAD"
+          extra_args: "--regex --entropy=True"
+
+      - name: Run ESLint
+        run: npm run lint || true
+
+  tests:
+    name: Run Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: security_scan
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Tests with Coverage
+        run: npm test -- --coverage
+
+      - name: Enforce 80% Test Coverage
+        run: |
+          COVERAGE=$(node -e "console.log(require('./coverage/coverage-summary.json').total.lines.pct)")
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Test coverage is below 80%. Failing pipeline."
+            exit 1
+          fi
+
+  sonarcloud_scan:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (SonarCloud requirement)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Run SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          npm install -g sonarqube-scanner
+          sonar-scanner \
+            -Dsonar.organization=tu-organizacion \
+            -Dsonar.projectKey=tu-proyecto \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      - name: Fail if SonarQube Score is below B
+        run: |
+          SCORE=$(curl -s "https://sonarcloud.io/api/qualitygates/project_status?projectKey=tu-proyecto" | jq -r '.projectStatus.status')
+          echo "SonarQube Score: $SCORE"
+          if [[ "$SCORE" != "OK" ]]; then
+            echo "SonarQube Score is below B. Failing pipeline."
+            exit 1
+          fi
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: sonarcloud_scan
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        run: npm run build || true
+
+      - name: Deploy application (GitHub Pages)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
