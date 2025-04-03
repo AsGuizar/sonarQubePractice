@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "deploy": "gh-pages -d ."
+  "deploy": "gh-pages -d .",
+  "test": "echo \"No tests specified\" && exit 0"
   },
   "repository": {
     "type": "git",
