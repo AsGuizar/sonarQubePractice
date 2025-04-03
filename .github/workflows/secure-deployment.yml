@@ -105,7 +105,7 @@ jobs:
         run: |
           npm install -g sonarqube-scanner
           sonar-scanner \
-            -Dsonar.organization=your-sonarcloud-organization \
+            -Dsonar.organization=asguizar \
             -Dsonar.projectKey=AsGuizar_sonarQubePractice \
             -Dsonar.sources=. \
             -Dsonar.host.url=https://sonarcloud.io \
