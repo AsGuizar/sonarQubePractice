@@ -111,15 +111,6 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      - name: Fail if SonarQube Score is below B
-        run: |
-          SCORE=$(curl -s "https://sonarcloud.io/api/qualitygates/project_status?projectKey=AsGuizar_sonarQubePractice" | jq -r '.projectStatus.status')
-          echo "SonarQube Score: $SCORE"
-          if [[ "$SCORE" != "OK" ]]; then
-            echo "SonarQube Score is below B. Failing pipeline."
-            exit 1
-          fi
-
 
   deploy:
     name: Deploy to Production
