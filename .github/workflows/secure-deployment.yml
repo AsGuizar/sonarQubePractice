@@ -78,6 +78,15 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Check test coverage
+        run: |
+          COVERAGE=$(grep -Po '(?<=\s)[0-9]+(?=\s*%\s*.*total)' ./coverage/lcov-report/index.html || echo "0")
+          echo "Test Coverage: $COVERAGE%"
+          if [ "$COVERAGE" -lt 80 ]; then
+            echo "Test coverage is below 80%. Failing pipeline."
+            exit 1
+          fi
+
   sonarcloud_scan:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
