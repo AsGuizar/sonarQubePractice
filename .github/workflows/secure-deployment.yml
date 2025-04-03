@@ -38,8 +38,9 @@ jobs:
       - name: Scan for Secrets (TruffleHog)
         uses: trufflesecurity/trufflehog@main
         with:
-          base: "HEAD"
-          extra_args: "--regex --entropy=True"
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: "--regex --entropy"
 
       - name: Run ESLint
         run: npm run lint || true
