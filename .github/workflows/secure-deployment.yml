@@ -66,18 +66,23 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Check test coverage from JSON
+      - name: Check test coverage
         run: |
-          if [ ! -f ./coverage/coverage-summary.json ]; then
+          FILE="./coverage/coverage-summary.json"
+          if [ ! -f "$FILE" ]; then
             echo "Coverage summary not found! Failing pipeline."
             exit 1
           fi
-          COVERAGE=$(node -pe "require('./coverage/coverage-summary.json').total.statements.pct || 0")
+      
+          COVERAGE=$(node -pe "let s = require('$FILE').total.statements.pct; console.log(s !== undefined ? s : 0)")
+          
           echo "Test Coverage: $COVERAGE%"
+      
           if (( $(echo "$COVERAGE < 80" | bc -l) )); then
             echo "Test coverage is below 80%. Failing pipeline."
             exit 1
           fi
+      
       
 
   sonarcloud_scan:
