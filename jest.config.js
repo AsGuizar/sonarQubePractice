@@ -1,5 +1,5 @@
 module.exports = {
   collectCoverage: true,
-  coverageDirectory: './coverage', // This is the correct directory path
+  coverageDirectory: './coverage/lcov-report', // This is the correct directory path
   coverageReporters: ['html', 'lcov'],
 };
